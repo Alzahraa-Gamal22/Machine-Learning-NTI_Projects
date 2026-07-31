@@ -3,20 +3,31 @@ import joblib
 import numpy as np
 
 # ==========================
-# Load Model & Scaler
+# Load Model
 # ==========================
 
 model = joblib.load("loan_model.pkl")
-scaler = joblib.load("scaler.pkl")
+model_name = joblib.load("model_name.pkl")
+
+# Load Scaler only if Logistic Regression is the best model
+if model_name == "Logistic Regression":
+    scaler = joblib.load("scaler.pkl")
 
 # ==========================
-# App Title
+# App Configuration
 # ==========================
 
-st.set_page_config(page_title="Loan Approval Prediction", page_icon="💰")
+st.set_page_config(
+    page_title="Loan Approval Prediction",
+    page_icon="💰",
+    layout="centered"
+)
 
-st.title("Loan Approval Prediction")
+st.title(" Loan Approval Prediction")
 st.write("Enter the applicant information to predict whether the loan will be approved.")
+
+st.sidebar.header("Model Information")
+st.sidebar.success(f"Best Model: {model_name}")
 
 # ==========================
 # User Inputs
@@ -31,12 +42,12 @@ no_of_dependents = st.number_input(
 
 education = st.selectbox(
     "Education",
-    ("Graduate", "Not Graduate")
+    ["Graduate", "Not Graduate"]
 )
 
 self_employed = st.selectbox(
     "Self Employed",
-    ("No", "Yes")
+    ["No", "Yes"]
 )
 
 income_annum = st.number_input(
@@ -99,7 +110,7 @@ self_employed = 0 if self_employed == "No" else 1
 # Prediction
 # ==========================
 
-if st.button("Predict"):
+if st.button("Predict Loan Status"):
 
     new_data = np.array([[
         no_of_dependents,
@@ -115,11 +126,16 @@ if st.button("Predict"):
         bank_asset_value
     ]])
 
-    new_data = scaler.transform(new_data)
+    # Apply scaling only if Logistic Regression is used
+    if model_name == "Logistic Regression":
+        new_data = scaler.transform(new_data)
 
     prediction = model.predict(new_data)
+
+    st.subheader("Prediction Result")
+    st.write(f"**Model Used:** {model_name}")
 
     if prediction[0] == 0:
         st.success(" Loan Approved")
     else:
-        st.error(" Loan Rejected")
+        st.error("Loan Rejected")
